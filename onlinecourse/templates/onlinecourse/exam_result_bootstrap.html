@@ -4,29 +4,50 @@
     <meta charset="UTF-8">
     {% load static %}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Exam Result</title>
 </head>
+
 <body>
 
- <nav class="navbar navbar-light bg-light">
+<nav class="navbar navbar-light bg-light">
     <div class="container-fluid">
         <div class="navbar-header">
-              <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Home</a>
+            <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Home</a>
         </div>
+
         <ul class="nav navbar-nav navbar-right">
             {% if user.is_authenticated %}
             <li>
-                <a class="btn btn-link" href="#">{{ user.first_name }}({{ user.username }})</a>
-                <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">Logout</a>
+                <a class="btn btn-link" href="#">
+                    {{ user.first_name }}({{ user.username }})
+                </a>
+                <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">
+                    Logout
+                </a>
             </li>
             {% else %}
             <li>
                 <form class="form-inline" action="{% url 'onlinecourse:login' %}" method="post">
                     {% csrf_token %}
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Username" name="username" >
-                        <input type="password" class="form-control" placeholder="Username" name="psw" >
-                        <button class="btn btn-primary" type="submit">Login</button>
-                        <a class="btn btn-link" href="{% url 'onlinecourse:registration' %}">Sign Up</a>
+                        <input
+                            type="text"
+                            class="form-control"
+                            placeholder="Username"
+                            name="username"
+                        >
+                        <input
+                            type="password"
+                            class="form-control"
+                            placeholder="Password"
+                            name="psw"
+                        >
+                        <button class="btn btn-primary" type="submit">
+                            Login
+                        </button>
+                        <a class="btn btn-link" href="{% url 'onlinecourse:registration' %}">
+                            Sign Up
+                        </a>
                     </div>
                 </form>
             </li>
@@ -35,21 +56,100 @@
     </div>
 </nav>
 
-<div class="container-fluid">
-    {% if grade > 80 %}
-    <div class="alert alert-success">
-       <!--HINT Display passed info -->
-    </div>
-        {% else %}
-        <div class="alert alert-danger">
-            <!--HINT Display failed info -->
+<div class="container-fluid mt-4 mb-5">
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Exam Result</h3>
         </div>
-        <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
-        {% endif %}
-        <div class="card-columns-vertical mt-1">
-        <h5 class="">Exam results</h5>
-            <!--HINT Display exam results-->
+
+        <div class="card-body">
+            <h4>{{ course.name }}</h4>
+
+            {% if passed %}
+            <div class="alert alert-success mt-3">
+                <h4>Congratulations!</h4>
+                <p>You have passed the exam.</p>
+                <p>
+                    <strong>Your final score:</strong> {{ grade }}
+                </p>
+            </div>
+            {% else %}
+            <div class="alert alert-danger mt-3">
+                <h4>Sorry, you did not pass the exam.</h4>
+                <p>
+                    <strong>Your final score:</strong> {{ grade }}
+                </p>
+                <p>Please review your answers and try again.</p>
+            </div>
+
+            <a class="btn btn-danger" href="{% url 'onlinecourse:course_details' course.id %}">
+                Re-test
+            </a>
+            {% endif %}
         </div>
     </div>
+
+    <div class="card-columns-vertical mt-4">
+        <h5>Exam results</h5>
+
+        {% for result in exam_results %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>
+                    Question {{ forloop.counter }}: {{ result.question.content }}
+                </h5>
+            </div>
+
+            <div class="card-body">
+                <p>
+                    <strong>Grade:</strong> {{ result.question.grade }}
+                </p>
+
+                {% if result.is_correct %}
+                <p class="text-success">
+                    <strong>Correct</strong>
+                </p>
+                {% else %}
+                <p class="text-danger">
+                    <strong>Incorrect</strong>
+                </p>
+                {% endif %}
+
+                <ul class="list-group">
+                    {% for choice in result.choices %}
+                    <li class="list-group-item
+                        {% if choice.is_correct %}
+                            list-group-item-success
+                        {% endif %}
+                        {% if choice in result.selected_choices and not choice.is_correct %}
+                            list-group-item-danger
+                        {% endif %}
+                    ">
+                        {{ choice.content }}
+
+                        {% if choice in result.selected_choices %}
+                            <strong> - Your choice</strong>
+                        {% endif %}
+
+                        {% if choice.is_correct %}
+                            <strong> - Correct answer</strong>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        <a class="btn btn-primary" href="{% url 'onlinecourse:index' %}">
+            Back to courses
+        </a>
+    </div>
+
+</div>
+
 </body>
 </html>
